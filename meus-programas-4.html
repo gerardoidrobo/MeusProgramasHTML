@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Meus Programas</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --card: #21253a;
+    --accent: #5b8af5;
+    --accent2: #a78bfa;
+    --text: #eef0f8;
+    --muted: #8b90a8;
+    --border: #2e3352;
+    --danger: #f56565;
+    --radius: 16px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100dvh;
+    padding-bottom: 100px;
+  }
+
+  header {
+    background: linear-gradient(135deg, #1a1d27 0%, #12152a 100%);
+    padding: 52px 20px 24px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(12px);
+  }
+
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+
+  .add-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    color: #fff;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(91,138,245,0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+  }
+  .add-btn:active { transform: scale(0.92); }
+
+  /* Search */
+  .search-wrap {
+    padding: 14px 20px 0;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 11px 16px 11px 40px;
+    color: var(--text);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-icon {
+    position: absolute;
+    left: 34px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 0.9rem;
+    pointer-events: none;
+    margin-top: 7px;
+  }
+
+  /* Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+    padding: 20px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.2s;
+    position: relative;
+    text-decoration: none;
+    color: inherit;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card:active { transform: scale(0.95); }
+  .card:hover { border-color: var(--accent); box-shadow: 0 4px 24px rgba(91,138,245,0.18); }
+
+  .card-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+  }
+
+  .card-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: center;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+
+  .card-desc {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(245,101,101,0.15);
+    border: none;
+    color: var(--danger);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+  .delete-btn:active { background: rgba(245,101,101,0.35); }
+  .edit-mode .delete-btn { display: flex; }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 60px 30px;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty h2 { font-size: 1.1rem; color: var(--text); margin-bottom: 6px; }
+  .empty p { font-size: 0.85rem; line-height: 1.5; }
+
+  /* Modal */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px 40px;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .modal h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .field input {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .field input::placeholder { color: var(--muted); }
+
+  /* Emoji picker row */
+  .emoji-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .emoji-opt {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .emoji-opt:active { transform: scale(0.9); }
+  .emoji-opt.selected { border-color: var(--accent); background: rgba(91,138,245,0.12); }
+
+  /* Color picker */
+  .color-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .color-opt {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.15s;
+  }
+  .color-opt:active { transform: scale(0.85); }
+  .color-opt.selected { border-color: #fff; }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  .btn-cancel {
+    flex: 1;
+    padding: 13px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--muted);
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .btn-save {
+    flex: 2;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-save:active { opacity: 0.85; }
+
+  /* Bottom bar */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(26,29,39,0.95);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0 28px;
+    backdrop-filter: blur(12px);
+    z-index: 10;
+  }
+  .bar-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: color 0.15s;
+    padding: 4px 16px;
+  }
+  .bar-btn .icon { font-size: 1.3rem; }
+  .bar-btn.active { color: var(--accent); }
+
+  .count-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    font-weight: 700;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div>
+      <h1>📱 Meus Programas</h1>
+      <p id="subtitle">Seus apps em um lugar só</p>
+    </div>
+    <button class="add-btn" onclick="openModal()" title="Adicionar programa">＋</button>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="search" id="searchInput" placeholder="Buscar programa..." oninput="renderGrid()">
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="bottom-bar">
+  <button class="bar-btn active" id="btnAll" onclick="setFilter('all')">
+    <span class="icon">🏠</span>Todos
+  </button>
+  <button class="bar-btn" id="btnEdit" onclick="toggleEdit()">
+    <span class="icon">✏️</span>Editar
+  </button>
+  <button class="bar-btn" onclick="openModal()">
+    <span class="icon">➕</span>Adicionar
+  </button>
+  <button class="bar-btn" onclick="openBackup()">
+    <span class="icon">💾</span>Backup
+  </button>
+</div>
+
+<!-- Backup Modal -->
+<div class="overlay" id="overlayBackup" onclick="closeBackupOutside(event)">
+  <div class="modal">
+    <h2>💾 Backup dos Programas</h2>
+
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:20px;line-height:1.5">
+      Salve seus programas em um arquivo de texto ou envie por e-mail para não perder nada.
+    </p>
+
+    <button class="btn-save" style="width:100%;margin-bottom:12px" onclick="downloadBackup()">
+      ⬇️ Baixar arquivo no celular
+    </button>
+
+    <div class="field">
+      <label>Seu e-mail (para enviar cópia)</label>
+      <input type="email" id="fEmail" placeholder="seu@email.com">
+    </div>
+
+    <button class="btn-save" style="width:100%;margin-bottom:12px;background:linear-gradient(135deg,#34d399,#22d3ee)" onclick="sendEmail()">
+      📧 Enviar por e-mail
+    </button>
+
+    <div class="field" style="margin-top:8px">
+      <label>Restaurar backup (cole o texto abaixo)</label>
+      <textarea id="fRestore" placeholder="Cole aqui o conteúdo do arquivo de backup..."
+        style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:0.85rem;outline:none;resize:vertical;min-height:80px;font-family:inherit"></textarea>
+    </div>
+
+    <button class="btn-save" style="width:100%;margin-bottom:12px;background:linear-gradient(135deg,#fb923c,#f43f5e)" onclick="restoreBackup()">
+      🔄 Restaurar backup
+    </button>
+
+    <button class="btn-cancel" style="width:100%" onclick="closeBackup()">Fechar</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <h2 id="modalTitle">Novo Programa</h2>
+
+    <div class="field">
+      <label>Nome do Programa</label>
+      <input type="text" id="fName" placeholder="Ex: Calculadora">
+    </div>
+
+    <div class="field">
+      <label>Link (URL)</label>
+      <input type="url" id="fUrl" placeholder="https://... ou caminho/arquivo.html">
+    </div>
+
+    <div class="field">
+      <label>Descrição (opcional)</label>
+      <input type="text" id="fDesc" placeholder="Para que serve?">
+    </div>
+
+    <div class="field">
+      <label>Ícone</label>
+      <div class="emoji-row" id="emojiRow"></div>
+    </div>
+
+    <div class="field">
+      <label>Cor do ícone</label>
+      <div class="color-row" id="colorRow"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveProgram()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const EMOJIS = ['💻','🧮','📊','📝','🎮','🔧','📅','⏱️','🌐','🔐','📦','🎨','📷','🔔','📡','🧩','💡','🗂️','📱','🚀'];
+const COLORS = [
+  '#5b8af5','#a78bfa','#34d399','#f472b6','#fb923c',
+  '#facc15','#22d3ee','#f43f5e','#60a5fa','#c084fc'
+];
+
+let programs = JSON.parse(localStorage.getItem('meus_programas') || '[]');
+let editMode = false;
+let selectedEmoji = EMOJIS[0];
+let selectedColor = COLORS[0];
+let editId = null;
+
+function save() {
+  localStorage.setItem('meus_programas', JSON.stringify(programs));
+}
+
+function renderGrid() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const grid = document.getElementById('grid');
+  const filtered = programs.filter(p =>
+    p.name.toLowerCase().includes(q) || (p.desc||'').toLowerCase().includes(q)
+  );
+
+  document.getElementById('subtitle').textContent =
+    programs.length === 0 ? 'Adicione seu primeiro programa ➕'
+    : `${programs.length} programa${programs.length !== 1 ? 's' : ''} cadastrado${programs.length !== 1 ? 's' : ''}`;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = programs.length === 0
+      ? `<div class="empty" style="grid-column:1/-1">
+           <div class="empty-icon">📂</div>
+           <h2>Nenhum programa ainda</h2>
+           <p>Toque em <strong>Adicionar</strong> para cadastrar seu primeiro programa HTML.</p>
+         </div>`
+      : `<div class="empty" style="grid-column:1/-1">
+           <div class="empty-icon">🔍</div>
+           <h2>Nada encontrado</h2>
+           <p>Tente outro termo de busca.</p>
+         </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(p => `
+    <a class="card${editMode ? ' edit-mode' : ''}"
+       href="${p.url}" target="_blank"
+       onclick="handleCardClick(event,'${p.id}')">
+      <div class="card-icon" style="background:${p.color}22">
+        <span style="color:${p.color}">${p.icon}</span>
+      </div>
+      <span class="card-name">${p.name}</span>
+      ${p.desc ? `<span class="card-desc">${p.desc}</span>` : ''}
+      <button class="delete-btn" onclick="deleteProgram(event,'${p.id}')" title="Remover">✕</button>
+    </a>
+  `).join('');
+}
+
+function handleCardClick(e, id) {
+  if (editMode) {
+    e.preventDefault();
+    startEdit(id);
+  }
+}
+
+function deleteProgram(e, id) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (confirm('Remover este programa?')) {
+    programs = programs.filter(p => p.id !== id);
+    save();
+    renderGrid();
+  }
+}
+
+function toggleEdit() {
+  editMode = !editMode;
+  const btn = document.getElementById('btnEdit');
+  btn.classList.toggle('active', editMode);
+  btn.querySelector('.icon').textContent = editMode ? '✅' : '✏️';
+  renderGrid();
+}
+
+function setFilter(f) {
+  document.querySelectorAll('.bar-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btnAll').classList.add('active');
+  renderGrid();
+}
+
+/* Modal */
+function buildEmojiPicker() {
+  document.getElementById('emojiRow').innerHTML = EMOJIS.map(e =>
+    `<button class="emoji-opt${e===selectedEmoji?' selected':''}" onclick="pickEmoji('${e}')">${e}</button>`
+  ).join('');
+}
+function buildColorPicker() {
+  document.getElementById('colorRow').innerHTML = COLORS.map(c =>
+    `<div class="color-opt${c===selectedColor?' selected':''}" style="background:${c}" onclick="pickColor('${c}')"></div>`
+  ).join('');
+}
+function pickEmoji(e) {
+  selectedEmoji = e;
+  buildEmojiPicker();
+}
+function pickColor(c) {
+  selectedColor = c;
+  buildColorPicker();
+}
+
+function openModal() {
+  editId = null;
+  document.getElementById('modalTitle').textContent = 'Novo Programa';
+  document.getElementById('fName').value = '';
+  document.getElementById('fUrl').value = '';
+  document.getElementById('fDesc').value = '';
+  selectedEmoji = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+  selectedColor = COLORS[Math.floor(Math.random()*COLORS.length)];
+  buildEmojiPicker();
+  buildColorPicker();
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => document.getElementById('fName').focus(), 300);
+}
+
+function startEdit(id) {
+  const p = programs.find(x => x.id === id);
+  if (!p) return;
+  editId = id;
+  document.getElementById('modalTitle').textContent = 'Editar Programa';
+  document.getElementById('fName').value = p.name;
+  document.getElementById('fUrl').value = p.url;
+  document.getElementById('fDesc').value = p.desc || '';
+  selectedEmoji = p.icon;
+  selectedColor = p.color;
+  buildEmojiPicker();
+  buildColorPicker();
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+  editId = null;
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('overlay')) closeModal();
+}
+
+function saveProgram() {
+  const name = document.getElementById('fName').value.trim();
+  const url  = document.getElementById('fUrl').value.trim();
+  const desc = document.getElementById('fDesc').value.trim();
+
+  if (!name) { alert('Digite o nome do programa.'); return; }
+  if (!url)  { alert('Digite o link do programa.'); return; }
+
+  if (editId) {
+    const p = programs.find(x => x.id === editId);
+    if (p) { p.name=name; p.url=url; p.desc=desc; p.icon=selectedEmoji; p.color=selectedColor; }
+  } else {
+    programs.push({ id: Date.now().toString(), name, url, desc, icon: selectedEmoji, color: selectedColor });
+  }
+
+  save();
+  closeModal();
+  renderGrid();
+}
+
+/* ---- BACKUP ---- */
+function openBackup() {
+  document.getElementById('fEmail').value = '';
+  document.getElementById('fRestore').value = '';
+  document.getElementById('overlayBackup').classList.add('open');
+}
+function closeBackup() {
+  document.getElementById('overlayBackup').classList.remove('open');
+}
+function closeBackupOutside(e) {
+  if (e.target === document.getElementById('overlayBackup')) closeBackup();
+}
+
+function gerarTextoBackup() {
+  const data = new Date().toLocaleString('pt-BR');
+  let txt = `===== BACKUP - MEUS PROGRAMAS =====\nData: ${data}\nTotal: ${programs.length} programa(s)\n\n`;
+  programs.forEach((p, i) => {
+    txt += `[${i+1}] ${p.icon} ${p.name}\n`;
+    txt += `    Link: ${p.url}\n`;
+    if (p.desc) txt += `    Desc: ${p.desc}\n`;
+    txt += `    Cor: ${p.color}\n\n`;
+  });
+  txt += `===== JSON (para restaurar) =====\n${JSON.stringify(programs)}`;
+  return txt;
+}
+
+function downloadBackup() {
+  if (programs.length === 0) { alert('Nenhum programa para salvar.'); return; }
+  const txt = gerarTextoBackup();
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `meus-programas-backup-${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function sendEmail() {
+  const email = document.getElementById('fEmail').value.trim();
+  if (!email) { alert('Digite seu e-mail.'); return; }
+  if (programs.length === 0) { alert('Nenhum programa para enviar.'); return; }
+  const txt = gerarTextoBackup();
+  const subject = encodeURIComponent('Backup - Meus Programas');
+  const body = encodeURIComponent(txt);
+  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+}
+
+function restoreBackup() {
+  const txt = document.getElementById('fRestore').value.trim();
+  if (!txt) { alert('Cole o conteúdo do backup primeiro.'); return; }
+  try {
+    const jsonMatch = txt.match(/\[.*\]/s);
+    if (!jsonMatch) throw new Error();
+    const restored = JSON.parse(jsonMatch[0]);
+    if (!Array.isArray(restored)) throw new Error();
+    if (!confirm(`Restaurar ${restored.length} programa(s)? Os dados atuais serão substituídos.`)) return;
+    programs = restored;
+    save();
+    renderGrid();
+    closeBackup();
+    alert('✅ Backup restaurado com sucesso!');
+  } catch {
+    alert('❌ Arquivo inválido. Use o arquivo gerado pelo botão "Baixar".');
+  }
+}
+
+// Demo: add samples if empty
+if (programs.length === 0) {
+  programs = [
+    { id:'demo1', name:'Exemplo 1', url:'#', desc:'Seu programa aqui', icon:'💻', color:'#5b8af5' },
+    { id:'demo2', name:'Exemplo 2', url:'#', desc:'Clique em Editar', icon:'📊', color:'#a78bfa' },
+  ];
+}
+
+renderGrid();
+buildEmojiPicker();
+buildColorPicker();
+</script>
+</body>
+</html>
