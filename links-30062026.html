@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>As Minhas Notas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f5f7; --white: #fff; --accent: #5b4ef5; --accent-light: #ede9fe;
+    --text: #111; --muted: #888; --border: #e0e0e8; --danger: #e53935;
+    --link-bg: #eef6ff; --link-border: #b8d9ff; --link-color: #1768c9;
+    --note-bg: #fff9e6; --note-border: #f0d060; --note-color: #9a7b00;
+    --wa: #25d366; --star: #f5c518; --radius: 14px;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+
+  header { background: var(--accent); color: #fff; padding: 22px 20px 18px; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 1.3rem; font-weight: 700; }
+  .badge { background: #ffffff30; border-radius: 20px; padding: 3px 12px; font-size: 0.78rem; font-weight: 600; }
+
+  .action-bar { display: flex; gap: 8px; margin: 12px 16px 0; }
+  .action-bar button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 6px; font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 600; color: #333; cursor: pointer; }
+  .action-bar .wa-all { background: var(--wa); border-color: var(--wa); color: #fff; }
+
+  .type-switch { display: flex; margin: 10px 16px 0; background: var(--white); border-radius: 12px; padding: 4px; gap: 4px; box-shadow: 0 2px 8px #0000000a; }
+  .type-btn { flex: 1; padding: 10px; border: none; border-radius: 9px; font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; background: transparent; color: var(--muted); transition: all 0.15s; }
+  .type-btn.active.link-active { background: var(--link-color); color: #fff; }
+  .type-btn.active.note-active { background: var(--note-color); color: #fff; }
+
+  .add-box { background: var(--white); margin: 10px 16px 0; border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 8px #0000000a; display: flex; flex-direction: column; gap: 10px; }
+  .add-box input, .add-box select { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 0.95rem; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
+  .add-box input:focus, .add-box select:focus { border-color: var(--accent); background: #fff; }
+  .add-box input::placeholder { color: #bbb; }
+  .row { display: flex; gap: 8px; }
+  .row select { flex: 1; }
+  .btn-save { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 12px 20px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.95rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .newcat-toggle { background: none; border: none; color: var(--accent); font-size: 0.82rem; font-family: 'Inter', sans-serif; cursor: pointer; text-align: left; padding: 0; font-weight: 500; }
+  .newcat-row { display: flex; gap: 8px; }
+  .newcat-row input { flex: 1; }
+  .btn-create { background: var(--accent-light); color: var(--accent); border: none; border-radius: 10px; padding: 10px 16px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+
+  /* EDITOR DE TEXTO */
+  .editor-toolbar { display: flex; gap: 4px; flex-wrap: wrap; background: var(--bg); border: 1.5px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 6px 8px; }
+  .tb-btn { background: var(--white); border: 1px solid var(--border); border-radius: 6px; padding: 5px 9px; font-size: 0.85rem; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; color: var(--text); transition: all 0.15s; line-height: 1; }
+  .tb-btn:active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tb-sep { width: 1px; background: var(--border); margin: 3px 2px; }
+  .editor-area { min-height: 90px; background: var(--bg); border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; padding: 12px 14px; font-size: 0.95rem; font-family: 'Inter', sans-serif; color: var(--text); outline: none; line-height: 1.6; }
+  .editor-area:empty:before { content: attr(data-placeholder); color: #bbb; pointer-events: none; }
+  .editor-area:focus { border-color: var(--accent); background: #fff; }
+  .editor-area ul, .editor-area ol { padding-left: 20px; }
+  .editor-area b, .editor-area strong { font-weight: 700; }
+  .editor-area i, .editor-area em { font-style: italic; }
+  .mic-row { display: flex; align-items: center; gap: 8px; }
+  .btn-mic { background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 1rem; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .btn-mic.recording { background: #fde8e8; border-color: var(--danger); color: var(--danger); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  /* TABS */
+  .tabs-wrap { display: flex; align-items: center; gap: 8px; padding: 14px 16px 0; }
+  .tabs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; flex: 1; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex-shrink: 0; padding: 6px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--white); color: var(--muted); transition: all 0.15s; }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-manage-cats { flex-shrink: 0; background: none; border: none; font-size: 1.1rem; cursor: pointer; padding: 4px 6px; }
+
+  .manage-panel { display: none; margin: 10px 16px 0; background: var(--white); border-radius: var(--radius); padding: 14px 16px; box-shadow: 0 2px 8px #0000000a; }
+  .manage-panel.open { display: block; }
+  .manage-panel h3 { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .manage-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--bg); font-size: 0.9rem; }
+  .manage-row:last-child { border-bottom: none; }
+  .manage-del { background: #fde8e8; color: var(--danger); border: none; border-radius: 8px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+
+  .items-list { padding: 10px 16px 0; display: flex; flex-direction: column; gap: 8px; }
+
+  /* LINK CARD */
+  .link-card { background: var(--link-bg); border: 1.5px solid var(--link-border); border-radius: var(--radius); padding: 12px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 4px #0000000a; }
+  .link-card.starred { border-color: var(--star); }
+  .favicon { width: 32px; height: 32px; border-radius: 8px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; overflow: hidden; }
+  .favicon img { width: 20px; height: 20px; object-fit: contain; }
+  .link-info { flex: 1; min-width: 0; }
+  .link-name { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--link-color); }
+  .link-domain { font-size: 0.72rem; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* NOTE CARD */
+  .note-card { background: var(--note-bg); border: 1.5px solid var(--note-border); border-radius: var(--radius); padding: 14px; box-shadow: 0 1px 4px #0000000a; }
+  .note-card.starred { border-color: var(--star); }
+  .note-header { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+  .note-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+  .note-title { font-size: 0.88rem; font-weight: 700; flex: 1; color: var(--note-color); }
+  .note-body { font-size: 0.85rem; color: #5c4a00; line-height: 1.6; word-break: break-word; }
+  .note-body ul, .note-body ol { padding-left: 18px; }
+  .note-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+
+  /* SHARED BUTTONS */
+  .cat-tag { font-size: 0.7rem; background: #ffffffb0; color: #555; border-radius: 20px; padding: 2px 9px; font-weight: 600; flex-shrink: 0; white-space: nowrap; }
+  .btn-open { background: var(--link-color); color: #fff; border: none; border-radius: 8px; padding: 6px 10px; font-size: 0.78rem; font-family: 'Inter', sans-serif; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+  .btn-wa { background: var(--wa); color: #fff; border: none; border-radius: 8px; padding: 6px 8px; font-size: 0.85rem; cursor: pointer; flex-shrink: 0; font-family: 'Inter', sans-serif; font-weight: 600; }
+  .btn-edit { background: none; border: none; color: #999; cursor: pointer; font-size: 0.9rem; padding: 3px; flex-shrink: 0; }
+  .btn-del { background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.95rem; padding: 3px; flex-shrink: 0; }
+  .btn-star { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 2px; flex-shrink: 0; opacity: 0.25; transition: opacity 0.15s; }
+  .btn-star.on { opacity: 1; }
+  .section-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; padding: 6px 2px 2px; }
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+
+  /* MODAL */
+  .overlay { display: none; position: fixed; inset: 0; background: #000a; z-index: 100; align-items: flex-end; justify-content: center; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--white); border-radius: 18px 18px 0 0; width: 100%; max-width: 520px; padding: 24px 18px 32px; display: flex; flex-direction: column; gap: 12px; max-height: 90vh; overflow-y: auto; }
+  .modal h2 { font-size: 1.05rem; font-weight: 700; }
+  .modal input, .modal select { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 0.95rem; font-family: 'Inter', sans-serif; outline: none; }
+  .modal input:focus, .modal select:focus { border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 10px; }
+  .btn-primary { flex: 1; background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 13px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.92rem; cursor: pointer; }
+  .btn-cancel { flex: 1; background: var(--bg); color: var(--text); border: none; border-radius: 10px; padding: 13px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.92rem; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📋 As Minhas Notas</h1>
+    <div style="font-size:0.72rem;opacity:0.75;margin-top:2px">por Gerardo Pizo</div>
+  </div>
+  <span class="badge" id="total-count">0 itens</span>
+</header>
+
+<div class="action-bar">
+  <button onclick="exportTxt()">💾 Guardar</button>
+  <button onclick="sendEmail()">✉️ Email</button>
+  <button class="wa-all" onclick="shareAllWA()">🟢 WhatsApp</button>
+</div>
+
+<div class="type-switch">
+  <button class="type-btn active link-active" id="btn-link" onclick="setType('link')">🔗 Link</button>
+  <button class="type-btn" id="btn-note" onclick="setType('note')">📝 Texto</button>
+</div>
+
+<!-- FORM LINK -->
+<div class="add-box" id="form-link">
+  <input type="url" id="f-url" placeholder="Cola aqui o link  (https://…)" autocomplete="off">
+  <div class="row">
+    <select id="f-cat-link"></select>
+    <button class="btn-save" onclick="saveLink()">Guardar</button>
+  </div>
+  <button class="newcat-toggle" onclick="toggleNewCat('link')">＋ Nova categoria</button>
+  <div class="newcat-row" id="newcat-link" style="display:none">
+    <input type="text" id="f-newcat-link" placeholder="Nome da categoria…">
+    <button class="btn-create" onclick="addCategory('link')">Criar</button>
+  </div>
+</div>
+
+<!-- FORM NOTA COM EDITOR RICO -->
+<div class="add-box" id="form-note" style="display:none">
+  <input type="text" id="f-note-title" placeholder="Título (ex: Reunião, Ideia…)">
+
+  <!-- TOOLBAR -->
+  <div class="editor-toolbar">
+    <button class="tb-btn" onclick="fmt('bold')" title="Negrito"><b>N</b></button>
+    <button class="tb-btn" onclick="fmt('italic')" title="Itálico"><i>I</i></button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="fmt('insertUnorderedList')" title="Lista de pontos">• Lista</button>
+    <button class="tb-btn" onclick="fmt('insertOrderedList')" title="Lista numerada">1. Ordem</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="insertText('✅ ')" title="Check">✅</button>
+    <button class="tb-btn" onclick="insertText('⚠️ ')" title="Aviso">⚠️</button>
+    <button class="tb-btn" onclick="insertText('📌 ')" title="Pin">📌</button>
+    <button class="tb-btn" onclick="insertText('🔹 ')" title="Ponto">🔹</button>
+    <button class="tb-btn" onclick="insertText('⭐ ')" title="Estrela">⭐</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="fmt('formatBlock', 'h3')" title="Título">T</button>
+    <button class="tb-btn" onclick="fmt('formatBlock', 'p')" title="Normal">¶</button>
+  </div>
+  <div class="editor-area" id="f-note-text" contenteditable="true" data-placeholder="Escreve aqui a tua nota…"></div>
+
+  <!-- MIC -->
+  <div class="mic-row">
+    <button class="btn-mic" id="btn-mic" onclick="toggleVoice()">🎤 Gravar voz</button>
+    <span id="voice-status" style="font-size:0.8rem;color:var(--danger);font-weight:600;display:none">🔴 A gravar… fala agora</span>
+  </div>
+
+  <div class="row">
+    <select id="f-cat-note"></select>
+    <button class="btn-save" onclick="saveNote()">Guardar</button>
+  </div>
+  <button class="newcat-toggle" onclick="toggleNewCat('note')">＋ Nova categoria</button>
+  <div class="newcat-row" id="newcat-note" style="display:none">
+    <input type="text" id="f-newcat-note" placeholder="Nome da categoria…">
+    <button class="btn-create" onclick="addCategory('note')">Criar</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrap">
+  <div class="tabs" id="tabs"></div>
+  <button class="btn-manage-cats" onclick="toggleManagePanel()" title="Gerir categorias">⚙️</button>
+</div>
+
+<div class="manage-panel" id="manage-panel">
+  <h3>Gerir categorias</h3>
+  <div id="manage-list"></div>
+</div>
+
+<div class="items-list" id="items-list"></div>
+
+<div class="overlay" id="overlay" onclick="closeModalBg(event)">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+  // ── MIGRAÇÃO ───────────────────────────────────────────
+  function loadData() {
+    var key = 'meus-items-v3';
+    var oldKeys = ['meus-items-v2', 'meus-items-v1', 'meus-links-v2', 'meus-links'];
+    var current = JSON.parse(localStorage.getItem(key) || 'null');
+    if (current && current.items && current.items.length) return current;
+    for (var k = 0; k < oldKeys.length; k++) {
+      var old = JSON.parse(localStorage.getItem(oldKeys[k]) || 'null');
+      if (old && old.items && old.items.length) {
+        var migrated = {
+          categories: old.categories || ['Geral'],
+          items: old.items.map(function(i) {
+            return { id: i.id || Date.now(), type: i.type || 'link', url: i.url || '', title: i.title || '', html: i.html || '', text: i.text || '', cat: i.cat || 'Geral', starred: !!i.starred };
+          })
+        };
+        localStorage.setItem(key, JSON.stringify(migrated));
+        return migrated;
+      }
+    }
+    return {
+      categories: ['Geral', 'Trabalho', 'Pessoal'],
+      items: [
+        { id: 1, type: 'link', url: 'https://google.com', cat: 'Geral', starred: false },
+        { id: 2, type: 'link', url: 'https://youtube.com', cat: 'Geral', starred: false },
+        { id: 3, type: 'note', title: 'Exemplo de nota', html: '<ul><li>✅ Tarefa feita</li><li>📌 Ponto importante</li></ul>', text: '✅ Tarefa feita\n📌 Ponto importante', cat: 'Pessoal', starred: true }
+      ]
+    };
+  }
+
+  var data = loadData();
+  var activeTab = 'Todos';
+  var currentType = 'link';
+  var editingId = null;
+
+  function save() { localStorage.setItem('meus-items-v3', JSON.stringify(data)); }
+  function getDomain(url) { try { return new URL(url).hostname.replace('www.', ''); } catch { return url; } }
+  function getFavicon(url) { try { return 'https://www.google.com/s2/favicons?domain=' + new URL(url).hostname + '&sz=64'; } catch { return null; } }
+  function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // ── EDITOR ────────────────────────────────────────────
+  function fmt(cmd, val) {
+    document.getElementById('f-note-text').focus();
+    document.execCommand(cmd, false, val || null);
+  }
+  function insertText(t) {
+    document.getElementById('f-note-text').focus();
+    document.execCommand('insertText', false, t);
+  }
+
+  // ── HTML → WhatsApp texto ─────────────────────────────
+  function htmlToWA(html) {
+    var tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    function walk(node) {
+      var out = '';
+      node.childNodes.forEach(function(n) {
+        if (n.nodeType === 3) { out += n.textContent; return; }
+        var tag = n.tagName ? n.tagName.toLowerCase() : '';
+        if (tag === 'b' || tag === 'strong') out += '*' + walk(n) + '*';
+        else if (tag === 'i' || tag === 'em') out += '_' + walk(n) + '_';
+        else if (tag === 'h3' || tag === 'h2') out += '*' + walk(n).toUpperCase() + '*\n';
+        else if (tag === 'li') out += '• ' + walk(n) + '\n';
+        else if (tag === 'br') out += '\n';
+        else if (tag === 'p' || tag === 'div') out += walk(n) + '\n';
+        else out += walk(n);
+      });
+      return out;
+    }
+    return walk(tmp).replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  // ── TYPE SWITCH ────────────────────────────────────────
+  function setType(t) {
+    currentType = t;
+    document.getElementById('form-link').style.display = t === 'link' ? 'flex' : 'none';
+    document.getElementById('form-note').style.display = t === 'note' ? 'flex' : 'none';
+    document.getElementById('btn-link').className = 'type-btn' + (t === 'link' ? ' active link-active' : '');
+    document.getElementById('btn-note').className = 'type-btn' + (t === 'note' ? ' active note-active' : '');
+    renderSelects();
+  }
+
+  // ── RENDER ────────────────────────────────────────────
+  function render() { renderSelects(); renderTabs(); renderItems(); renderManagePanel(); updateCount(); }
+
+  function renderSelects() {
+    ['link','note'].forEach(function(t) {
+      var sel = document.getElementById('f-cat-' + t);
+      var cur = sel.value;
+      sel.innerHTML = data.categories.map(function(c) { return '<option value="' + esc(c) + '">' + c + '</option>'; }).join('');
+      if (data.categories.includes(cur)) sel.value = cur;
+      else if (activeTab !== 'Todos' && activeTab !== '★' && data.categories.includes(activeTab)) sel.value = activeTab;
+    });
+  }
+
+  function renderTabs() {
+    var el = document.getElementById('tabs');
+    var sc = data.items.filter(function(i) { return i.starred; }).length;
+    var h = '<button class="tab ' + (activeTab==='Todos'?'active':'') + '" onclick="setTab(\'Todos\')">Todos (' + data.items.length + ')</button>';
+    if (sc) h += '<button class="tab ' + (activeTab==='★'?'active':'') + '" onclick="setTab(\'★\')">⭐ Favoritos (' + sc + ')</button>';
+    data.categories.forEach(function(cat) {
+      var n = data.items.filter(function(i) { return i.cat === cat; }).length;
+      h += '<button class="tab ' + (activeTab===cat?'active':'') + '" onclick="setTab(\'' + esc(cat) + '\')">' + cat + ' (' + n + ')</button>';
+    });
+    el.innerHTML = h;
+  }
+
+  function renderManagePanel() {
+    var el = document.getElementById('manage-list');
+    if (!data.categories.length) { el.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">Sem categorias.</p>'; return; }
+    el.innerHTML = data.categories.map(function(cat) {
+      var n = data.items.filter(function(i) { return i.cat === cat; }).length;
+      return '<div class="manage-row"><span>' + cat + ' <span style="color:var(--muted);font-size:0.8rem">(' + n + ' item' + (n!==1?'s':'') + ')</span></span><button class="manage-del" onclick="delCat(\'' + esc(cat) + '\')">Apagar</button></div>';
+    }).join('');
+  }
+
+  function cardHtml(item) {
+    if (item.type === 'link') {
+      var fav = getFavicon(item.url);
+      var favHtml = fav ? '<img src="' + fav + '" onerror="this.parentElement.textContent=\'🔗\'">' : '🔗';
+      var short = item.url.length > 34 ? item.url.slice(0,34) + '…' : item.url;
+      return '<div class="link-card ' + (item.starred?'starred':'') + '">'
+        + '<button class="btn-star ' + (item.starred?'on':'') + '" onclick="toggleStar(' + item.id + ')">⭐</button>'
+        + '<div class="favicon">' + favHtml + '</div>'
+        + '<div class="link-info"><div class="link-name">' + getDomain(item.url) + '</div><div class="link-domain">' + short + '</div></div>'
+        + '<span class="cat-tag">' + item.cat + '</span>'
+        + '<button class="btn-open" onclick="window.open(\'' + item.url + '\',\'_blank\',\'noopener\')">Abrir</button>'
+        + '<button class="btn-wa" onclick="shareWALink(\'' + esc(item.url) + '\',\'' + esc(getDomain(item.url)) + '\',\'' + esc(item.cat) + '\')">🟢</button>'
+        + '<button class="btn-edit" onclick="openEdit(' + item.id + ')">✏️</button>'
+        + '<button class="btn-del" onclick="delItem(' + item.id + ')">✕</button>'
+        + '</div>';
+    } else {
+      var bodyHtml = item.html || esc(item.text || '').replace(/\n/g,'<br>');
+      return '<div class="note-card ' + (item.starred?'starred':'') + '">'
+        + '<div class="note-header">'
+        + '<button class="btn-star ' + (item.starred?'on':'') + '" onclick="toggleStar(' + item.id + ')">⭐</button>'
+        + '<span class="note-icon">📝</span>'
+        + '<span class="note-title">' + esc(item.title||'Nota') + '</span>'
+        + '<button class="btn-edit" onclick="openEdit(' + item.id + ')">✏️</button>'
+        + '<button class="btn-del" onclick="delItem(' + item.id + ')">✕</button>'
+        + '</div>'
+        + '<div class="note-body">' + bodyHtml + '</div>'
+        + '<div class="note-footer">'
+        + '<span class="cat-tag">' + item.cat + '</span>'
+        + '<button class="btn-wa" onclick="shareWANote(' + item.id + ')">🟢 Partilhar</button>'
+        + '</div></div>';
+    }
+  }
+
+  function renderItems() {
+    var list = activeTab==='Todos' ? data.items.slice()
+      : activeTab==='★' ? data.items.filter(function(i){return i.starred;})
+      : data.items.filter(function(i){return i.cat===activeTab;});
+    var starred = list.filter(function(i){return i.starred;}).reverse();
+    var normal = list.filter(function(i){return !i.starred;}).reverse();
+    var el = document.getElementById('items-list');
+    if (!list.length) { el.innerHTML = '<div class="empty"><div style="font-size:2rem;margin-bottom:10px">✨</div>Sem itens aqui.<br>Adiciona um link ou texto acima!</div>'; return; }
+    var h = '';
+    if (starred.length) { h += '<div class="section-label">⭐ Favoritos</div>'; h += starred.map(cardHtml).join(''); }
+    if (normal.length) { if (starred.length) h += '<div class="section-label">Restantes</div>'; h += normal.map(cardHtml).join(''); }
+    el.innerHTML = h;
+  }
+
+  function updateCount() {
+    document.getElementById('total-count').textContent = data.items.length + ' item' + (data.items.length!==1?'s':'');
+  }
+
+  function setTab(t) { activeTab = t; render(); }
+  function toggleManagePanel() { document.getElementById('manage-panel').classList.toggle('open'); }
+  function toggleStar(id) { var item = data.items.find(function(i){return i.id===id;}); if(item){item.starred=!item.starred;save();render();} }
+
+  // ── SAVE LINK ─────────────────────────────────────────
+  function saveLink() {
+    var inp = document.getElementById('f-url');
+    var url = inp.value.trim();
+    if (!url || !url.startsWith('http')) { inp.style.borderColor='#e53935'; inp.focus(); setTimeout(function(){inp.style.borderColor='';},1000); return; }
+    var cat = document.getElementById('f-cat-link').value;
+    data.items.push({ id: Date.now(), type: 'link', url: url, cat: cat, starred: false });
+    save(); render(); inp.value = ''; inp.focus();
+  }
+
+  // ── SAVE NOTE ─────────────────────────────────────────
+  function saveNote() {
+    var editor = document.getElementById('f-note-text');
+    var html = editor.innerHTML.trim();
+    var text = htmlToWA(html);
+    if (!text) { editor.style.border='1.5px solid #e53935'; editor.focus(); setTimeout(function(){editor.style.border='';},1000); return; }
+    var title = document.getElementById('f-note-title').value.trim() || 'Nota';
+    var cat = document.getElementById('f-cat-note').value || data.categories[0];
+    data.items.push({ id: Date.now(), type: 'note', title: title, html: html, text: text, cat: cat, starred: false });
+    save(); render();
+    document.getElementById('f-note-title').value = '';
+    editor.innerHTML = '';
+    editor.focus();
+  }
+
+  // ── DELETE ────────────────────────────────────────────
+  function delItem(id) { if(!confirm('Apagar este item?'))return; data.items=data.items.filter(function(i){return i.id!==id;}); save(); render(); }
+
+  function delCat(cat) {
+    var n = data.items.filter(function(i){return i.cat===cat;}).length;
+    if (!confirm('Apagar categoria "' + cat + '"?' + (n?' Os '+n+' item(s) passam para "Geral"':''))) return;
+    data.items.forEach(function(i){if(i.cat===cat)i.cat='Geral';});
+    data.categories = data.categories.filter(function(c){return c!==cat;});
+    if (!data.categories.includes('Geral')) data.categories.unshift('Geral');
+    if (activeTab===cat) activeTab='Todos';
+    save(); render();
+  }
+
+  // ── CATEGORIES ────────────────────────────────────────
+  function toggleNewCat(t) { var row=document.getElementById('newcat-'+t); row.style.display=row.style.display==='none'?'flex':'none'; if(row.style.display==='flex')document.getElementById('f-newcat-'+t).focus(); }
+  function addCategory(t) {
+    var inp=document.getElementById('f-newcat-'+t); var val=inp.value.trim();
+    if(!val)return; if(data.categories.includes(val)){alert('Essa categoria já existe.');return;}
+    data.categories.push(val); save(); render();
+    document.getElementById('f-cat-'+t).value=val; inp.value='';
+    document.getElementById('newcat-'+t).style.display='none';
+  }
+
+  // ── EDIT MODAL ────────────────────────────────────────
+  function openEdit(id) {
+    var item = data.items.find(function(i){return i.id===id;});
+    if (!item) return;
+    editingId = id;
+    var catOpts = data.categories.map(function(c){return '<option value="'+esc(c)+'"'+(c===item.cat?' selected':'')+'>'+c+'</option>';}).join('');
+    var h = '<h2>' + (item.type==='link'?'🔗 Editar Link':'📝 Editar Nota') + '</h2>';
+    if (item.type==='link') {
+      h += '<input type="url" id="e-url" value="'+esc(item.url)+'" placeholder="https://…">';
+    } else {
+      h += '<input type="text" id="e-title" value="'+esc(item.title)+'" placeholder="Título">';
+      h += '<div class="editor-toolbar" style="margin-top:4px">'
+        + '<button class="tb-btn" onclick="fmtE(\'bold\')"><b>N</b></button>'
+        + '<button class="tb-btn" onclick="fmtE(\'italic\')"><i>I</i></button>'
+        + '<div class="tb-sep"></div>'
+        + '<button class="tb-btn" onclick="fmtE(\'insertUnorderedList\')">• Lista</button>'
+        + '<button class="tb-btn" onclick="fmtE(\'insertOrderedList\')">1. Ordem</button>'
+        + '<div class="tb-sep"></div>'
+        + '<button class="tb-btn" onclick="insE(\'✅ \')">✅</button>'
+        + '<button class="tb-btn" onclick="insE(\'📌 \')">📌</button>'
+        + '<button class="tb-btn" onclick="insE(\'⭐ \')">⭐</button>'
+        + '</div>';
+      h += '<div class="editor-area" id="e-text" contenteditable="true" style="border-radius:0 0 10px 10px;border:1.5px solid var(--border);border-top:none">' + (item.html || esc(item.text||'').replace(/\n/g,'<br>')) + '</div>';
+    }
+    h += '<select id="e-cat">' + catOpts + '</select>';
+    h += '<div class="modal-btns"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="saveEdit()">Guardar</button></div>';
+    document.getElementById('modal-content').innerHTML = h;
+    document.getElementById('overlay').classList.add('open');
+  }
+
+  function fmtE(cmd) { document.getElementById('e-text').focus(); document.execCommand(cmd,false,null); }
+  function insE(t) { document.getElementById('e-text').focus(); document.execCommand('insertText',false,t); }
+
+  function saveEdit() {
+    var item = data.items.find(function(i){return i.id===editingId;});
+    if (!item) return;
+    if (item.type==='link') {
+      var url=document.getElementById('e-url').value.trim();
+      if(!url||!url.startsWith('http')){alert('Link inválido.');return;}
+      item.url=url;
+    } else {
+      var ed=document.getElementById('e-text');
+      var html=ed.innerHTML.trim();
+      if(!html){alert('O texto não pode estar vazio.');return;}
+      item.title=document.getElementById('e-title').value.trim()||'Nota';
+      item.html=html;
+      item.text=htmlToWA(html);
+    }
+    item.cat=document.getElementById('e-cat').value;
+    save(); render(); closeModal();
+  }
+
+  function closeModal() { document.getElementById('overlay').classList.remove('open'); editingId=null; }
+  function closeModalBg(e) { if(e.target.id==='overlay')closeModal(); }
+
+  // ── WHATSAPP ──────────────────────────────────────────
+  function shareWALink(url, name, cat) {
+    var msg = '🔗 *' + name + '*\n'
+      + '📂 Categoria: _' + cat + '_\n\n'
+      + url + '\n\n'
+      + '_Partilhado via As Minhas Notas_ 📋';
+    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+  }
+
+  function shareWANote(id) {
+    var item = data.items.find(function(i){return i.id===id;});
+    if (!item) return;
+    var msg = '📝 *' + (item.title||'Nota') + '*\n'
+      + '📂 Categoria: _' + item.cat + '_\n'
+      + '─────────────────\n'
+      + (item.text || '') + '\n\n'
+      + '_Partilhado via As Minhas Notas_ 📋';
+    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+  }
+
+  function shareAllWA() {
+    var links = data.items.filter(function(i){return i.type==='link';});
+    var cat = (activeTab!=='Todos'&&activeTab!=='★') ? activeTab : null;
+    var filtered = cat ? links.filter(function(l){return l.cat===cat;}) : links;
+    if (!filtered.length) { alert('Não tens links para partilhar.'); return; }
+    var msg = cat
+      ? '🔗 *Links — ' + cat + '*\n' + '─────────────────\n'
+      : '🔗 *Todos os meus links*\n' + '─────────────────\n';
+    filtered.forEach(function(l) { msg += (l.starred?'⭐ ':'') + getDomain(l.url) + '\n' + l.url + '\n\n'; });
+    msg += '_Partilhado via As Minhas Notas_ 📋';
+    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+  }
+
+  // ── VOZ ───────────────────────────────────────────────
+  var recognition = null;
+  var isRecording = false;
+
+  function toggleVoice() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('O teu browser não suporta reconhecimento de voz. Usa o Chrome no Android.');
+      return;
+    }
+    if (isRecording) { recognition.stop(); return; }
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.lang = 'pt-PT';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.onstart = function() {
+      isRecording = true;
+      document.getElementById('btn-mic').className = 'btn-mic recording';
+      document.getElementById('btn-mic').textContent = '⏹️ Parar';
+      document.getElementById('voice-status').style.display = 'inline';
+    };
+    recognition.onresult = function(e) {
+      var t = '';
+      for (var i=0;i<e.results.length;i++) t += e.results[i][0].transcript;
+      document.getElementById('f-note-text').innerText = t;
+    };
+    recognition.onerror = function(e) { alert('Erro: ' + e.error); stopVoice(); };
+    recognition.onend = function() { stopVoice(); };
+    recognition.start();
+  }
+  function stopVoice() {
+    isRecording = false;
+    var btn = document.getElementById('btn-mic');
+    btn.className = 'btn-mic';
+    btn.textContent = '🎤 Gravar voz';
+    document.getElementById('voice-status').style.display = 'none';
+  }
+
+  // ── EXPORT ────────────────────────────────────────────
+  function buildText() {
+    var date = new Date().toLocaleString('pt-PT');
+    var txt = 'AS MINHAS NOTAS E LINKS\nExportado em: ' + date + '\n' + '='.repeat(40) + '\n\n';
+    data.categories.forEach(function(cat) {
+      var items = data.items.filter(function(i){return i.cat===cat;});
+      if (!items.length) return;
+      txt += '[ ' + cat.toUpperCase() + ' ]\n' + '─'.repeat(30) + '\n';
+      items.forEach(function(i) {
+        var star = i.starred ? '⭐ ' : '';
+        if (i.type==='link') txt += star + '🔗 ' + i.url + '\n';
+        else txt += star + '📝 ' + (i.title||'Nota') + '\n   ' + (i.text||'').replace(/\n/g,'\n   ') + '\n';
+      });
+      txt += '\n';
+    });
+    return txt;
+  }
+  function exportTxt() {
+    var blob = new Blob([buildText()], {type:'text/plain;charset=utf-8'});
+    var a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='minhas-notas.txt'; a.click(); URL.revokeObjectURL(a.href);
+  }
+  function sendEmail() {
+    window.location.href = 'mailto:?subject=' + encodeURIComponent('As Minhas Notas e Links') + '&body=' + encodeURIComponent(buildText());
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key==='Enter' && document.activeElement.id==='f-url') saveLink();
+    if (e.key==='Enter' && document.activeElement.id==='f-newcat-link') addCategory('link');
+    if (e.key==='Enter' && document.activeElement.id==='f-newcat-note') addCategory('note');
+  });
+
+  render();
+</script>
+<div style="text-align:center;padding:20px 0 8px;font-size:0.72rem;color:#bbb;font-family:'Inter',sans-serif;">
+  Criado por <strong style="color:#5b4ef5">Gerardo Pizo</strong> 🛠️
+</div>
+</body>
+</html>
